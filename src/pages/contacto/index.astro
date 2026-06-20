@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Contacto" description="Ponte en contacto conmigo.">
+  <div class="bg-primary-50 dark:bg-[#0c0c0c] border-b border-primary-200 dark:border-primary-800 py-16 md:py-24">
+    <div class="container mx-auto px-4 sm:px-6 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-14 items-start">
+      <div>
+        <h1 class="text-4xl md:text-5xl font-heading font-extrabold text-primary-900 dark:text-white mb-4">Contacto</h1>
+        <p class="text-xl text-primary-600 dark:text-primary-400">
+          Estoy disponible para nuevos proyectos. Hablemos. Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatibus numquam possimus laudantium repudiandae neque temporibus at debitis accusantium natus? In aspernatur facilis impedit assumenda provident dignissimos eum amet possimus molestias.
+        </p>
+      </div>
+      <div class="glass-panel p-8 md:p-10 rounded-3xl">
+        <form name="contact" method="POST" data-netlify="true" class="space-y-6">
+          <input type="hidden" name="form-name" value="contact" />
+          
+          <div>
+            <label for="name" class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">Nombre</label>
+            <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-xl border border-primary-500 dark:border-primary-700 bg-primary-100 dark:bg-primary-900 text-primary-900 dark:text-primary-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-colors" placeholder="Tu nombre" />
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">Email</label>
+            <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-xl border border-primary-500 dark:border-primary-700 bg-primary-100 dark:bg-primary-900 text-primary-900 dark:text-primary-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-colors" placeholder="tu@email.com" />
+          </div>
+
+          <div>
+            <label for="message" class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">Mensaje</label>
+            <textarea id="message" name="message" rows="5" required class="w-full px-4 py-3 rounded-xl border border-primary-500 dark:border-primary-700 bg-primary-100 dark:bg-primary-900 text-primary-900 dark:text-primary-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-colors resize-y" placeholder="Cuéntame sobre tu proyecto..."></textarea>
+          </div>
+
+          <button type="submit" class="w-full px-6 py-3 bg-primary-600 dark:bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-700 dark:hover:bg-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-primary-900">
+            Enviar mensaje
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</BaseLayout>

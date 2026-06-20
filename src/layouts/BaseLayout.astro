@@ -1,0 +1,322 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE, SITE_URL } from '../config';
+
+const SITE_DESCRIPTION = 'Portafolio personal de Hades Conejo';
+import { resolvePath } from '../utils/navigation';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  publishedDate?: Date;
+  modifiedDate?: Date;
+  author?: string;
+}
+
+const {
+  title,
+  description = SITE_DESCRIPTION,
+  image = '/og-image.png',
+  type = 'website',
+  publishedDate,
+  modifiedDate,
+  author,
+} = Astro.props;
+
+const siteURL = SITE_URL.endsWith('/') ? SITE_URL : `${SITE_URL}/`;
+const canonicalPath = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const canonicalURL = new URL(canonicalPath, siteURL).href;
+const imageURL = new URL(image, siteURL).href;
+const fullTitle = `${title} | ${SITE_TITLE}`;
+const robotsContent = 'index, follow';
+const structuredData =
+  type === 'article'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: title,
+        description,
+        image: imageURL,
+        url: canonicalURL,
+        datePublished: publishedDate?.toISOString(),
+        dateModified: (modifiedDate ?? publishedDate)?.toISOString(),
+        author: author
+          ? {
+              '@type': 'Person',
+              name: author,
+            }
+          : undefined,
+        publisher: {
+          '@type': 'Organization',
+          name: SITE_TITLE,
+          logo: {
+            '@type': 'ImageObject',
+            url: new URL('/favicon.svg', siteURL).href,
+          },
+        },
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: SITE_TITLE,
+        description,
+        url: siteURL,
+      };
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={resolvePath('/favicon.svg')} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="sitemap" href={resolvePath('/sitemap.xml')} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="robots" content={robotsContent} />
+    
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={imageURL} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    {type === 'article' && publishedDate && (
+      <meta property="article:published_time" content={publishedDate.toISOString()} />
+    )}
+    {type === 'article' && (modifiedDate ?? publishedDate) && (
+      <meta property="article:modified_time" content={(modifiedDate ?? publishedDate)?.toISOString()} />
+    )}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@hadesdesinger" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageURL} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    
+    <title>{fullTitle}</title>
+
+    <ClientRouter />
+
+    <!-- Dark Mode initialization script to prevent FOUC and preserve theme across routes -->
+    <script is:inline data-astro-rerun>
+      (() => {
+        const getPreferredTheme = () => {
+          if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+            return localStorage.getItem('theme');
+          }
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+          }
+          return 'light';
+        };
+
+        const applyTheme = (theme, root = document.documentElement) => {
+          root.classList.toggle('dark', theme === 'dark');
+          window.localStorage.setItem('theme', theme);
+        };
+
+        applyTheme(getPreferredTheme());
+
+        if (!window.__hadesThemeBound) {
+          window.__hadesThemeBound = true;
+
+          document.addEventListener('astro:before-swap', (event) => {
+            const theme = localStorage.getItem('theme') || getPreferredTheme();
+            event.newDocument.documentElement.classList.toggle('dark', theme === 'dark');
+          });
+
+          document.addEventListener('astro:after-swap', () => {
+            applyTheme(localStorage.getItem('theme') || getPreferredTheme());
+            var l = document.getElementById('loader');
+            if (l) l.classList.add('hidden');
+          });
+
+          document.addEventListener('astro:page-load', () => {
+            applyTheme(localStorage.getItem('theme') || getPreferredTheme());
+          });
+        }
+      })();
+    </script>
+
+    <style>
+      #loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+        transition: opacity 0.7s ease, visibility 0.7s ease;
+      }
+      .dark #loader {
+        background: #0a0a0a;
+      }
+      #loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #loader-name {
+        position: absolute;
+        top: 1.5rem;
+        left: 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: #171717;
+      }
+      .dark #loader-name {
+        color: #fafafa;
+      }
+      #loader-label {
+        position: absolute;
+        top: 1.5rem;
+        right: 2rem;
+        font-size: 1rem;
+        font-weight: 400;
+        letter-spacing: 0.03em;
+        color: #525252;
+      }
+      .dark #loader-label {
+        color: #a3a3a3;
+      }
+      #loader-percent {
+        font-size: 5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        color: #171717;
+        transition: color 0.13s;
+      }
+      .dark #loader-percent {
+        color: #fafafa;
+      }
+      #loader-bar {
+        margin-top: 1.5rem;
+        width: 160px;
+        height: 3px;
+        border-radius: 2px;
+        background: #e5e5e5;
+        overflow: hidden;
+      }
+      .dark #loader-bar {
+        background: #262626;
+      }
+      #loader-bar-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 2px;
+        background: #525252;
+      }
+      .dark #loader-bar-fill {
+        background: #a3a3a3;
+      }
+      #loader-logo {
+        width: 200px;
+        margin-bottom: 3rem;
+      }
+    </style>
+  </head>
+  <body class="flex flex-col min-h-screen bg-primary-50 text-primary-900 transition-colors duration-300 dark:bg-[#0a0a0a] dark:text-primary-100">
+      <div id="loader" style="display:none" aria-hidden="true">
+        <div id="loader-name">Hades Conejo</div>
+        <div id="loader-label">Portafolio</div>
+        <div id="loader-logo">    
+            <svg width="100%" height="100%" viewBox="0 0 830 278" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-545.406853,-401.162268)">
+        <g transform="matrix(2.131191,-0,-0,1.431235,-317.717576,-441.535723)">
+            <path fill="currentColor" d="M410.266,683.172C410.251,680.055 410.228,679.289 410.194,675.52C410.136,668.835 410.077,662.303 410.018,655.923C409.611,629.698 409.078,625.245 408.38,620.008C407.708,614.96 407.159,611.549 406.71,609.786L405.131,603.908C404.899,603.046 404.97,602.069 405.32,601.3C405.669,600.531 406.252,600.07 406.876,600.07L439.914,600.07C440.656,600.07 441.329,600.72 441.631,601.73C441.933,602.74 441.807,603.919 441.311,604.741C437.341,611.309 435.183,629.447 434.742,640.614L434.74,640.654C434.567,644.175 434.481,647.867 434.481,651.732C434.481,653.135 434.399,660.473 434.299,668.958C423.411,677.042 415.818,681.153 410.266,683.172ZM435.787,689.512C446.322,683.084 464.191,669.282 468.137,647.868C467.872,629.636 465.672,611.568 461.292,604.813C460.768,604.005 460.619,602.809 460.914,601.775C461.208,600.741 461.889,600.07 462.644,600.07L495.681,600.07C496.32,600.07 496.916,600.553 497.262,601.353C497.608,602.153 497.657,603.16 497.392,604.027C495.722,609.499 494.695,614.553 494.333,619.196C493.955,624.038 493.154,631.565 492.978,637.497C492.802,643.425 492.656,649.571 492.539,655.934C492.363,670.779 492.275,684.226 492.275,696.277C492.275,744.856 493.436,759.68 495.879,770.591C496.27,772.341 496.775,774.214 497.39,776.214C497.657,777.08 497.609,778.089 497.263,778.891C496.918,779.693 496.322,780.178 495.681,780.178L462.644,780.178C461.933,780.178 461.282,779.581 460.964,778.634C460.645,777.688 460.712,776.554 461.137,775.706C463.875,770.243 465.583,765.563 466.185,761.609C466.815,757.47 467.3,752.585 467.644,746.953L467.646,746.922C467.646,746.922 468.781,732.21 468.781,719.851L468.695,699.346C463.056,700.615 452.25,705.673 433.864,723.243L433.864,723.262C433.864,756.606 434.938,756.983 437.245,765.419C438.133,768.558 439.528,771.977 441.413,775.693C441.843,776.54 441.914,777.676 441.596,778.627C441.278,779.577 440.627,780.178 439.914,780.178L406.876,780.178C406.246,780.178 405.658,779.709 405.31,778.928C404.962,778.147 404.899,777.158 405.144,776.294C406.935,769.957 408.003,764.671 408.311,760.419C408.632,755.982 408.968,750.503 409.319,743.98C409.893,731.772 410.21,718.001 410.271,702.668C419.287,700.704 432.747,691.62 435.787,689.512Z"/>
+        </g>
+        <g transform="matrix(2.131191,-0,-0,1.431235,-346.131839,-441.535723)">
+            <path fill="currentColor" d="M558.994,693.45C558.944,681.767 558.212,672.925 556.733,666.936C555.868,663.431 554.794,660.991 553.353,659.787C552.006,658.675 550.265,658.174 548.145,658.174C545.996,658.174 543.868,659.269 541.743,661.378C539.44,663.664 536.901,664.969 533.753,669.107C529.011,675.34 527.458,681.195 525.82,691.37C525.681,692.235 525.273,692.95 524.723,693.296C524.172,693.642 523.544,693.578 523.03,693.122C517.308,688.048 515.739,683.773 515.739,669.413C515.739,663.907 516.219,657.723 517.189,650.864C517.372,649.568 518.139,648.641 519.028,648.641C521.056,648.641 522.978,648.208 524.793,647.334L524.812,647.325L531.596,644.177L531.599,644.175C538.425,641.027 545.101,639.458 551.625,639.458C558.32,639.458 563.66,640.994 567.658,643.948C571.787,646.998 575.004,651.524 577.309,657.529L577.31,657.532C580.997,667.162 582.931,683.745 582.931,707.326L582.93,707.369L582.666,732.535C582.667,747.545 583.51,757.796 585.368,763.251C586.4,766.247 587.596,768.572 588.989,770.185L589.017,770.218L593.157,775.203C593.777,775.949 594.013,777.195 593.747,778.313C593.482,779.431 592.772,780.178 591.976,780.178L566.426,780.178C565.575,780.178 564.83,779.327 564.611,778.102L562.763,767.807C555.97,777.763 546.836,782.802 535.327,782.802C527.759,782.802 521.666,778.971 517.023,771.395L517.007,771.368C512.934,764.545 510.893,756.493 510.893,747.207C510.893,738.058 512.369,730.085 515.284,723.27C518.163,716.54 521.953,710.959 526.658,706.534L526.672,706.521C535.327,698.53 546.097,694.144 558.994,693.45ZM533.682,749.83C533.682,754.465 534.323,758.085 535.754,760.626C537.046,762.922 538.663,764.086 540.613,764.086C542.821,764.086 544.95,763.214 547.004,761.494C549.158,759.69 551.092,757.217 552.815,754.09L552.831,754.062C556.946,746.791 558.997,738.25 558.997,728.447L558.997,712.172C552.124,713.598 546.376,717.299 541.766,723.333L541.757,723.344C536.373,730.31 533.682,739.139 533.682,749.83Z"/>
+        </g>
+        <g transform="matrix(2.131191,-0,-0,1.431235,-371.287266,-441.535723)">
+            <path fill="currentColor" d="M654.648,772.227C648.346,779.255 640.646,782.802 631.533,782.802C621.918,782.802 614.352,778.581 608.795,770.307C603.072,761.784 600.14,749.802 600.14,734.285C600.14,719.246 601.631,706.097 604.585,694.829C607.558,683.492 611.479,673.993 616.332,666.314C625.536,651.742 636.745,643.76 649.957,642.367C649.625,622.466 649.632,618.452 648.933,614.666C648.234,610.879 646.874,607.518 646.176,605.312C645.494,603.159 644.717,601.189 643.845,599.401L643.842,599.396L640.846,593.23C640.433,592.378 640.374,591.253 640.695,590.316C641.017,589.38 641.663,588.791 642.369,588.791L674.526,588.791C675.113,588.791 675.667,589.2 676.022,589.895C676.377,590.591 676.494,591.495 676.337,592.337C674.732,600.959 673.313,609.325 673.055,617.435C672.804,625.307 672.764,637.235 672.705,644.129L672.705,644.157C672.529,655.68 672.441,667.138 672.441,678.53C672.441,689.934 672.456,698.564 672.485,704.419C672.514,710.253 672.587,715.782 672.704,721.007L672.705,721.038C672.993,740.323 673.442,751.79 674.132,755.432C674.8,758.952 675.474,761.77 676.17,763.882C676.854,765.961 677.633,767.898 678.509,769.692L681.5,775.716C681.921,776.566 681.986,777.697 681.666,778.64C681.347,779.583 680.698,780.178 679.988,780.178L657.17,780.178C656.259,780.178 655.479,779.204 655.319,777.868L654.648,772.227ZM650.138,729.152C650.401,715.713 650.533,703.124 650.533,691.387C650.533,680.858 650.463,670.768 650.321,661.117C643.331,663.618 635.029,676.884 632.077,685.11C628.011,696.441 625.924,710 625.924,729.103C625.924,740.25 626.449,748.052 627.603,752.494C628.671,756.605 629.908,759.648 631.392,761.548C632.727,763.257 634.349,764.086 636.246,764.086C638.283,764.086 640.073,763.494 641.607,762.259C643.161,761.006 646.714,756.962 647.592,753.551C649.014,748.033 649.888,741.875 650.138,729.152Z"/>
+        </g>
+        <g transform="matrix(2.131191,-0,-0,1.431235,-395.284601,-441.535723)">
+            <path fill="currentColor" d="M757.326,730.447C759.907,733.01 761.335,737.378 761.335,743.73C761.335,749.291 760.821,754.171 759.816,758.377C758.787,762.688 756.998,766.725 754.425,770.461C748.844,778.586 740.382,782.802 728.972,782.802C715.724,782.802 705.652,775.46 698.718,760.894L698.713,760.884C692.709,748.15 689.65,730.968 689.65,709.294C689.65,687.288 693.803,670.043 701.986,657.494C709.782,645.52 720.321,639.458 733.642,639.458C743.097,639.458 750.463,643.652 755.785,651.857L755.791,651.866C760.084,658.545 762.216,666.258 762.216,674.988C762.216,683.442 761.104,691.061 758.901,697.851C756.691,704.663 753.445,710.532 749.15,715.445C740.929,724.927 729.601,730.215 715.134,731.143C716.469,745.997 719.714,756.138 725.139,761.378C727.115,763.232 729.752,764.086 733.025,764.086C736.34,764.086 739.815,761.348 743.551,756.177C747.573,750.608 751.234,742.403 754.577,731.605C754.807,730.861 755.244,730.305 755.772,730.083C756.301,729.86 756.869,729.994 757.326,730.447ZM714.377,712.942C722.127,711.77 728.04,708.371 732.07,702.56C736.379,696.347 738.458,687.414 738.458,675.841C738.458,667.759 737.018,662.199 733.772,659.385C732.713,658.538 731.313,658.174 729.589,658.174C727.793,658.174 725.992,659.025 724.172,660.659C722.28,662.357 720.663,665.172 719.264,669.029C715.962,678.275 714.377,692.583 714.377,711.917L714.377,712.942Z"/>
+        </g>
+        <g transform="matrix(2.131191,-0,-0,1.431235,-416.564011,-441.535723)">
+            <path fill="currentColor" d="M835.879,635.992C837.579,641.619 838.423,647.294 838.423,653.014C838.423,658.503 838.253,663.046 837.921,666.645C837.584,670.288 837.079,673.794 836.407,677.164C834.832,685.044 832.562,691.068 829.664,695.289C829.171,696.007 828.454,696.266 827.795,695.963C827.137,695.66 826.642,694.844 826.507,693.838C824.772,680.917 822.974,672.494 820.931,668.66C819.017,665.068 817.131,662.599 815.217,661.35C813.31,660.105 811.286,659.486 809.144,659.486C806.962,659.486 805.178,659.778 803.794,660.412C802.504,661.003 801.384,661.843 800.441,662.951L800.421,662.975C798.445,665.232 797.368,667.72 797.368,670.593C797.368,673.65 797.86,676.297 798.886,678.517C800.017,680.962 801.516,683.239 803.373,685.363C805.335,687.607 807.569,689.787 810.072,691.904L817.996,698.591C825.014,704.447 829.808,709.344 832.41,713.218C837.813,721.264 840.449,729.782 840.449,738.679C840.449,750.219 837.794,759.924 832.504,767.806C825.973,777.708 816.211,782.802 803.153,782.802C791.237,782.802 782.314,778.522 776.325,770.248C774.474,767.687 773.167,765.108 772.373,762.548C772.231,762.089 772.175,761.581 772.211,761.078C772.72,753.97 774.825,747.269 778.58,741.014C782.274,734.839 785.92,731.383 789.42,730.418C790.066,730.239 790.728,730.577 791.165,731.308C791.602,732.039 791.751,733.057 791.558,733.993C791.361,734.946 791.289,736.379 791.289,738.286C791.289,740.29 791.706,742.765 792.482,745.731C793.289,748.814 794.447,751.675 795.952,754.317L795.966,754.341C799.25,760.24 802.912,763.299 807.03,763.299C811.059,763.299 814.052,762.103 815.939,759.369C817.711,756.801 818.629,753.899 818.629,750.617C818.629,747.225 818.143,744.372 817.103,742.086C815.971,739.598 814.47,737.278 812.611,735.111C810.652,732.829 808.423,730.633 805.925,728.519L797.998,721.83L797.968,721.804C790.989,715.66 786.214,710.382 783.604,706.045C778.213,697.083 775.548,687.308 775.548,676.759C775.548,665.432 778.728,656.234 785.12,649.19L785.123,649.187C791.003,642.735 798.328,639.458 807.118,639.458C807.16,639.458 807.203,639.46 807.245,639.465L822.699,641.032C825.934,641.026 828.204,640.591 829.474,639.419C830.766,638.227 831.854,636.867 832.733,635.328C833.15,634.597 833.79,634.235 834.428,634.37C835.067,634.504 835.614,635.117 835.879,635.992Z"/>
+        </g>
+    </g>
+            </svg>
+        </div> 
+        <div id="loader-percent">0%</div>
+        <div id="loader-bar"><div id="loader-bar-fill"></div></div>
+      </div>
+
+    <script is:inline>
+      (function () {
+        var el = document.getElementById('loader');
+        var pEl = document.getElementById('loader-percent');
+        var fEl = document.getElementById('loader-bar-fill');
+        if (!el || !pEl || !fEl) return;
+
+        el.style.display = 'flex';
+
+        var steps = 80;
+        var cur = 0;
+
+        function tick() {
+          cur++;
+          var t = Math.min(cur / steps, 1);
+          var pct = Math.round((1 - Math.pow(1 - t, 3)) * 100);
+          pEl.textContent = pct + '%';
+          fEl.style.width = pct + '%';
+
+          if (cur < steps) {
+            setTimeout(tick, 25);
+          } else {
+            setTimeout(function () {
+              el.classList.add('hidden');
+            }, 700);
+          }
+        }
+        tick();
+      })();
+    </script>
+
+    <div id="page-content">
+      <Navbar />
+      <main class="flex-grow">
+        <slot />
+      </main>
+      <Footer />
+    </div>
+
+    <!-- Global Observer for scroll animations & loader cleanup -->
+    <script>
+      document.addEventListener('astro:page-load', () => {
+
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-revealed');
+            }
+          });
+        }, {
+          root: null,
+          rootMargin: '0px',
+          threshold: 0.1
+        });
+
+        document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+          observer.observe(el);
+        });
+      });
+    </script>
+
+  </body>
+</html>

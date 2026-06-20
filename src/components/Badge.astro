@@ -1,0 +1,24 @@
+---
+interface Props {
+  variant?: 'primary' | 'success' | 'warning' | 'error' | 'neutral';
+  class?: string;
+}
+
+const { variant = 'primary', class: className = '' } = Astro.props;
+
+const baseStyles = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
+
+const variants = {
+  primary: "bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 border border-primary-200 dark:border-primary-800",
+  success: "bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 border border-primary-200 dark:border-primary-800",
+  warning: "bg-primary-200 dark:bg-primary-800/30 text-primary-800 dark:text-primary-300 border border-primary-300 dark:border-primary-700",
+  error: "bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 border border-primary-200 dark:border-primary-800",
+  neutral: "bg-primary-100 dark:bg-primary-800 text-primary-800 dark:text-primary-300 border border-primary-200 dark:border-primary-700",
+};
+
+const combinedClasses = `${baseStyles} ${variants[variant]} ${className}`;
+---
+
+<span class={combinedClasses}>
+  <slot />
+</span>
